@@ -1,0 +1,4 @@
+[all]
+core_freq=250
+core_freq_min=250
+enable_uart=1

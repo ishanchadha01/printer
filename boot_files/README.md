@@ -1,0 +1,1 @@
+for UART, make sure to add data from config.txt into Raspbian OS config.txt file at the bottom
