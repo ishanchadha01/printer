@@ -5,7 +5,7 @@
 volatile unsigned int __attribute__((aligned(16))) mailbox[36];
 
 // Base addr for peripherals in RPi 3b+
-#define PERIPHERAL_BASE 0xFE000000
+#define PERIPHERAL_BASE 0x3F000000
 
 enum {
     VIDEOCORE_MBOX = (PERIPHERAL_BASE + 0x0000B880),
