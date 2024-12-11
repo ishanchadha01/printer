@@ -79,6 +79,22 @@ void draw_char(unsigned char ch, int x, int y, unsigned char attr) {
     }
 }
 
+void draw_char_scaled(unsigned char ch, int x, int y, unsigned char attr, int scale) {
+    unsigned char* glyph = font[ch];  // Access the glyph for character 'ch'
+    for (int i = 0; i < FONT_HEIGHT; i++) {
+        for (int j = 0; j < FONT_WIDTH; j++) {
+            unsigned char mask = 1 << j;  // Match the mask calculation with the original function
+            unsigned char col = (glyph[i] & mask) ? (attr & 0x0f) : ((attr & 0xf0) >> 4);  // Apply foreground/background color
+            // Draw each pixel in the bit as a scale x scale block
+            for (int dy = 0; dy < scale; dy++) {
+                for (int dx = 0; dx < scale; dx++) {
+                    draw_pixel(x + j * scale + dx, y + i * scale + dy, col);
+                }
+            }
+        }
+    }
+}
+
 void draw_string(int x, int y, char* s, unsigned char attr) {
     while (*s) {
         if (*s == '\r') {
@@ -90,5 +106,21 @@ void draw_string(int x, int y, char* s, unsigned char attr) {
             x += FONT_WIDTH;
         }
         s++;
+    }
+}
+
+void draw_string_scaled(int x, int y, char* s, unsigned char attr, int scale) {
+    int original_x = x; // Save the original starting x position
+    while (*s) {
+        if (*s == '\r') {
+            x = original_x; // Reset x to the start of the line
+        } else if (*s == '\n') {
+            x = original_x; // Reset x to the start of the line
+            y += FONT_HEIGHT * scale; // Move down by the scaled font height
+        } else {
+            draw_char_scaled(*s, x, y, attr, scale);
+            x += FONT_WIDTH * scale; // Move right by the scaled font width
+        }
+        s++; // Move to the next character
     }
 }

@@ -18,7 +18,7 @@ unsigned int vgapal[] = {
 };
 
 enum {
-    FONT_WIDTH     = 8,
+    FONT_WIDTH     = 16,
     FONT_HEIGHT    = 8,
     FONT_BPG       = 8,  // Bytes per glyph
     FONT_BPL       = 1,  // Bytes per line
