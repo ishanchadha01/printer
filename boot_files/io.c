@@ -13,6 +13,7 @@ enum {
 
 enum {
     GPIO_MAX_PIN       = 53,
+    GPIO_FUNCTION_OUT  = 1,
     GPIO_FUNCTION_ALT0 = 4,
 };
 
