@@ -1,4 +1,5 @@
 // GPIO config functions
+#include "io.h"
 
 enum {
     PERIPHERAL_BASE = 0x3F000000, // starting addr of memory-mapped IO
@@ -9,12 +10,6 @@ enum {
     // GPPUPPDN0       = PERIPHERAL_BASE + 0x2000E4 // gpio pull up / pull down register 0, only for rpi4+
     GPPUD           = PERIPHERAL_BASE + 0x200094,
     GPPUDCLK0       = PERIPHERAL_BASE + 0x200098
-};
-
-enum {
-    GPIO_MAX_PIN       = 53,
-    GPIO_FUNCTION_OUT  = 1,
-    GPIO_FUNCTION_ALT0 = 4,
 };
 
 enum {

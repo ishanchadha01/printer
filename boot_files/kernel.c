@@ -26,6 +26,13 @@ void main() {
     draw_char('O',20,20,0x05);
     draw_string(30,30,"What's good?",0x0f);
 
+    for (int i=0; i<100; i++) {
+        uart_write_text("What's up\n");
+        wait_msec(300000);
+        uart_write_text("What's good\n");
+        wait_msec(300000);
+    }
+
     // Actuate motor
     int stepPin = 4; // X-axis step pin
     int dirPin = 5;  // X-axis direction pin
@@ -40,11 +47,11 @@ void main() {
     gpio_set(dirPin, 1); // Set direction (assuming '1' is HIGH)
     for (int i = 0; i < 200; i++) { // 200 steps for 1 revolution
         gpio_set(stepPin, 1); // Step pin HIGH
-        wait_msec(500); // Adjust delay for speed
+        wait_msec(500000); // Adjust delay for speed
         gpio_clear(stepPin, 1); // Step pin LOW
-        wait_msec(500);
+        wait_msec(500000);
     }
-    wait_msec(1000); // Wait for 1 second
+    wait_msec(1000000); // Wait for 1 second
 
     // digitalWrite(enablePin, LOW); // Enable the motor driver
     // digitalWrite(dirPin, HIGH); // Set direction
