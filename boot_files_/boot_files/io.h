@@ -12,4 +12,4 @@ enum {
 
 unsigned int gpio_set     (unsigned int pin_number, unsigned int value);
 unsigned int gpio_clear   (unsigned int pin_number, unsigned int value);
-unsigned int gpio_function(unsigned int pin_number, unsigned int value);
+unsigned int gpio_function(unsigned int pin_number, unsigned int function);

@@ -53,7 +53,19 @@ void gpio_pull(unsigned int pin_number, unsigned int value) {
     mmio_write(GPPUDCLK0, 0);        // Remove the clock
 }
 
-unsigned int gpio_function(unsigned int pin_number, unsigned int value) { return gpio_call(pin_number, value, GPFSEL1, 3, GPIO_MAX_PIN); }
+// unsigned int gpio_function(unsigned int pin_number, unsigned int value) { return gpio_call(pin_number, value, GPFSEL1, 3, GPIO_MAX_PIN); }
+unsigned int gpio_function(unsigned int pin_number, unsigned int function) {
+    unsigned int reg = GPFSEL0 + (pin_number / 10) * 4;  // Calculate correct GPFSEL register
+    unsigned int shift = (pin_number % 10) * 3;          // Calculate bit shift for specific pin
+    unsigned int mask = ~(0x7 << shift);                 // Mask to clear bits for this pin
+
+    unsigned int curval = mmio_read(reg);
+    curval &= mask;                                      // Clear current bits
+    curval |= (function << shift);                       // Set new function bits
+    mmio_write(reg, curval);
+
+    return 1;                                            // Indicate success
+}
 
 void gpio_use_as_alt0(unsigned int pin_number) {
     gpio_pull(pin_number, Pull_None);

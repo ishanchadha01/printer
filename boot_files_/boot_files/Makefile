@@ -12,7 +12,7 @@ boot.o: boot.S
 	$(LLVMPATH)/clang --target=aarch64-elf $(CLANGFLAGS) -c $< -o $@
 
 kernel8.img: boot.o $(OFILES)
-	ld.lld -m aarch64elf -nostdlib boot.o $(OFILES) -T link.ld -o kernel8.elf -l ../WiringPi/wiringPi	# lld installed from separate casket
+	ld.lld -m aarch64elf -nostdlib boot.o $(OFILES) -T link.ld -o kernel8.elf	# lld installed from separate casket
 	$(LLVMPATH)/llvm-objcopy -O binary kernel8.elf kernel8.img
 
 clean:
