@@ -1,8 +1,11 @@
+#include <boost/functional/hash.hpp> // TODO: optimize hash function
+
 #include <vector>
 #include <iostream>
 
 
 // Bookkeeping
+const double PT_EQUAL_THRESH = 1e-6;
 
 enum class status_t {
     ERROR=-1,
@@ -21,30 +24,37 @@ enum class state_t {
 
 // Point
 
-struct point_t {
+struct vec3_t {
     float x,y,z;
 
-    point_t operator+(point_t& other) const {
+    vec3_t operator+(vec3_t& other) const {
         return {x+other.x, y+other.y, z+other.z};
     }
 
-    point_t operator+(point_t& other) const {
+    vec3_t operator+(vec3_t& other) const {
         return {x-other.x, y-other.y, z-other.z};
     }
 
-    point_t operator*(float scalar) const {
+    vec3_t operator*(float scalar) const {
         return {scalar*x, scalar*y, scalar*z};
     }
 
-    bool operator==(const point_t& other) const {
-        return x == other.x && y == other.y && z == other.z;
+    // check if theyre all close
+    bool operator==(const vec3_t& other) const {
+        return std::abs(x - other.x) < PT_EQUAL_THRESH &&
+            std::abs(y - other.y) < PT_EQUAL_THRESH &&
+            std::abs(z - other.z) < PT_EQUAL_THRESH;
     }
 
-    float dot(const point_t& other) const {
+    bool operator!=(const vec3_t& other) const {
+        return !(*this == other);
+    }
+
+    float dot(const vec3_t& other) const {
         return x*other.x + y*other.y + z*other.z;
     }
 
-    point_t cross(const point_t& other) const {
+    vec3_t cross(const vec3_t& other) const {
         return {
             y * other.z - z * other.y,
             z * other.x - x * other.z,
@@ -52,8 +62,16 @@ struct point_t {
         };
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const point_t& p) {
+    friend std::ostream& operator<<(std::ostream& os, const vec3_t& p) {
         return os << "(" << p.x << ", " << p.y << ", " << p.z << ")";
+    }
+
+    friend size_t hash_value(const vec3_t& p) {
+        size_t seed = 0;
+        seed = boost::hash_combine(seed, p.x);
+        seed = boost::hash_combine(seed, p.y);
+        seed = boost::hash_combine(seed, p.z);
+        return seed;
     }
 };
 
@@ -62,23 +80,23 @@ struct point_t {
 // Triangle
 
 struct triangle_t {
-    uint32_t A,B,C;
-    point_t normal_vec;
-    point_t centroid;
+    std::array<uint32_t, 3> vertices; // references to points in mesh
+    vec3_t normal_vec;
+    vec3_t centroid;
 
-    void compute_normal(const std::vector<point_t>& vertices) {
-        point_t pA = vertices[A];
-        point_t pB = vertices[B];
-        point_t pC = vertices[C];
-        point_t AB = pB-pA;
-        point_t AC = pC-pA;
+    void compute_normal(const std::array<vec3_t, 3>& vertices) {
+        vec3_t pA = vertices[A];
+        vec3_t pB = vertices[B];
+        vec3_t pC = vertices[C];
+        vec3_t AB = pB-pA;
+        vec3_t AC = pC-pA;
         normal_vec = AB.cross(AC);
     }
 
-    void compute_centroid(const std::vector<point_t>& vertices) {
-        point_t pA = vertices[A];
-        point_t pB = vertices[B];
-        point_t pC = vertices[C];
+    void compute_centroid(const std::array<vec3_t, 3>& vertices) {
+        vec3_t pA = vertices[A];
+        vec3_t pB = vertices[B];
+        vec3_t pC = vertices[C];
         centroid = (pA+pB+pC) * (1.0f/3.0f);
     }
 };

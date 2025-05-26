@@ -1,13 +1,17 @@
 #include "mesh.hpp"
 
-Mesh::Mesh(std::filesystem::path cad_file) {
-    // read cad file
+// Mesh::Mesh(std::filesystem::path cad_file) {
+//     // read cad file
 
-    // populate points
+//     // populate points
 
-    // if triangles exist, populate; else create
+//     // if triangles exist, populate; else create
 
-    // compute normals
+//     // compute normals
+// }
+
+Mesh::Mesh() {
+    // initialize data structures
 }
 
 void Mesh::slice_nonplanar(int layer_height_mm) {
