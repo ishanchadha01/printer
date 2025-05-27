@@ -48,6 +48,7 @@ std::vector<Mesh> read_stl_ascii(const std::string filename) {
 	while (line_str << input) {
 		int idx = 0;
 		while (words[idx] << line_str) continue;
+		if (words.size() == 0) continue;
 		
 		switch (words[0]) {
 			case "solid":

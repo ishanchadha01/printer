@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <iostream>
+#include <cmath>
 
 
 // Bookkeeping
@@ -62,6 +63,17 @@ struct vec3_t {
         };
     }
 
+    void normalize() {
+        auto _norm = norm();
+        x /= norm;
+        y /= norm;
+        z /= norm;
+    }
+
+    float norm() const {
+        return std::sqrt(x*x + y*y + z*z);
+    }
+
     friend std::ostream& operator<<(std::ostream& os, const vec3_t& p) {
         return os << "(" << p.x << ", " << p.y << ", " << p.z << ")";
     }
@@ -90,7 +102,7 @@ struct triangle_t {
         vec3_t pC = vertices[C];
         vec3_t AB = pB-pA;
         vec3_t AC = pC-pA;
-        normal_vec = AB.cross(AC);
+        normal_vec = AB.cross(AC).normalize();
     }
 
     void compute_centroid(const std::array<vec3_t, 3>& vertices) {
