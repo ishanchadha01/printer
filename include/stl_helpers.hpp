@@ -52,14 +52,15 @@ std::vector<Mesh> read_stl_ascii(const std::string filename) {
 		int idx = 0;
 		std::istringstream line_stream(line_string);
 		while (line_stream >> words[idx]) idx++;
-		if (words.size() == 0) continue;
+		if (idx == 0) continue;
 		
 		if (words[0] == "solid") {
 			// create empty mesh
 			last_solid = std::make_unique<Mesh>();
 		} else if (words[0] == "endsolid") {
 			// end solid
-			solids.push_back(*last_solid);
+			solids.emplace_back(std::move(*last_solid));
+			last_solid.reset();
 		} else if (words[0] =="facet") {
 			// get normal, start triangle
 			last_triangle = std::make_unique<triangle_t>();
