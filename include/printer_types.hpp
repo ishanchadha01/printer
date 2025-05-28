@@ -1,4 +1,6 @@
-#include <boost/functional/hash.hpp> // TODO: optimize hash function
+#pragma once
+
+#include <boost/container_hash/hash.hpp> // TODO: optimize hash function
 
 #include <vector>
 #include <iostream>
@@ -32,7 +34,7 @@ struct vec3_t {
         return {x+other.x, y+other.y, z+other.z};
     }
 
-    vec3_t operator+(vec3_t& other) const {
+    vec3_t operator-(vec3_t& other) const {
         return {x-other.x, y-other.y, z-other.z};
     }
 
@@ -63,11 +65,12 @@ struct vec3_t {
         };
     }
 
-    void normalize() {
+    vec3_t normalize() {
         auto _norm = norm();
-        x /= norm;
-        y /= norm;
-        z /= norm;
+        x /= _norm;
+        y /= _norm;
+        z /= _norm;
+        return *this;
     }
 
     float norm() const {
@@ -80,9 +83,9 @@ struct vec3_t {
 
     friend size_t hash_value(const vec3_t& p) {
         size_t seed = 0;
-        seed = boost::hash_combine(seed, p.x);
-        seed = boost::hash_combine(seed, p.y);
-        seed = boost::hash_combine(seed, p.z);
+        boost::hash_combine(seed, p.x);
+        boost::hash_combine(seed, p.y);
+        boost::hash_combine(seed, p.z);
         return seed;
     }
 };
@@ -96,19 +99,20 @@ struct triangle_t {
     vec3_t normal_vec;
     vec3_t centroid;
 
-    void compute_normal(const std::array<vec3_t, 3>& vertices) {
-        vec3_t pA = vertices[A];
-        vec3_t pB = vertices[B];
-        vec3_t pC = vertices[C];
+    vec3_t compute_normal(const std::array<vec3_t, 3>& vertices) {
+        vec3_t pA = vertices[0];
+        vec3_t pB = vertices[1];
+        vec3_t pC = vertices[2];
         vec3_t AB = pB-pA;
         vec3_t AC = pC-pA;
-        normal_vec = AB.cross(AC).normalize();
+        auto computed_norm = AB.cross(AC);
+        return computed_norm;
     }
 
     void compute_centroid(const std::array<vec3_t, 3>& vertices) {
-        vec3_t pA = vertices[A];
-        vec3_t pB = vertices[B];
-        vec3_t pC = vertices[C];
+        vec3_t pA = vertices[0];
+        vec3_t pB = vertices[1];
+        vec3_t pC = vertices[2];
         centroid = (pA+pB+pC) * (1.0f/3.0f);
     }
 };

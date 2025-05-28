@@ -1,4 +1,4 @@
-#include "mesh.hpp"
+#include "include/mesh.hpp"
 
 // Mesh::Mesh(std::filesystem::path cad_file) {
 //     // read cad file
