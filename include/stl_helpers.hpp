@@ -61,6 +61,7 @@ std::vector<Mesh> read_stl_ascii(const std::string filename) {
 			// end solid
 			solids.emplace_back(std::move(*last_solid));
 			last_solid.reset();
+			point_set.clear();
 		} else if (words[0] =="facet") {
 			// get normal, start triangle
 			last_triangle = std::make_unique<triangle_t>();
@@ -88,6 +89,7 @@ std::vector<Mesh> read_stl_ascii(const std::string filename) {
 				point_idx = point_set[point_hash].second;
 			} else {
 				point_idx = last_solid->points.size();
+				point_set[point_hash] = {vertex, point_idx};
 				last_solid->points.push_back(vertex);
 			}
 			last_triangle->vertices[triangle_vertex_idx++] = point_idx;

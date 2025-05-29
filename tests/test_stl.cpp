@@ -7,7 +7,7 @@ class StlReaderTest : public testing::Test {
 };
 
 TEST_F(StlReaderTest, TestAll) {
-    const std::string filename = "../tests/data/test.stl";
+    const std::string filename = "../tests/data/ascii_example.stl";
     ASSERT_EQ(is_stl_ascii(filename), true);
 
     std::vector<Mesh> solids = read_stl_ascii(filename);
