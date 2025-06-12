@@ -7,6 +7,10 @@
 #include <cmath>
 
 
+// Constants
+const float MAX_PART_HEIGHT_MM = 300; // based on build volume
+
+
 // Bookkeeping
 const double PT_EQUAL_THRESH = 1e-6;
 

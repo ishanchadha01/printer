@@ -17,4 +17,6 @@ TEST_F(StlReaderTest, TestAll) {
     ASSERT_EQ(solids[0].points.size(), 4);
     ASSERT_EQ(solids[1].triangles.size(), 4);
     ASSERT_EQ(solids[1].points.size(), 4);
+
+    //TODO: test normals and triangle ordering
 };

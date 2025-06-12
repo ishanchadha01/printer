@@ -102,6 +102,7 @@ std::vector<Mesh> read_stl_ascii(const std::string filename) {
 }
 
 
+//TODO: finish read stl binary
 Mesh read_stl_binary(const std::string filename) {
 	Mesh solid;
 	
