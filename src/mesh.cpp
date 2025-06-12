@@ -1,47 +1,48 @@
 #include "include/mesh.hpp"
 
-// Mesh::Mesh(std::filesystem::path cad_file) {
-//     // read cad file
-
-//     // populate points
-
-//     // if triangles exist, populate; else create
-
-//     // compute normals
-// }
 
 Mesh::Mesh() {
     // initialize data structures
 }
 
 
-void Mesh::populate_layer_lists(int layer_height_mm) {
-    // sort z by layer height and arrange into layer bins
-    std::sort(triangles.begin(), triangles.end(), [](const triangle_t& a, const triangle_t& b) {
-        auto max_z1 = std::max({a.vertices[0].z, a.vertices[1].z a.vertices[1].z});
-        auto max_z2 = std::max({b.vertices[0].z, b.vertices[1].z, b.vertices[1].z});
-        return max_z1 > max_z2;
-    });
+std::vector<vec3_t> Mesh::intersect_triangle_with_plane(const triangle_t& tri, float z_plane) {
+    std::vector<vec3_t> intersection_pts;
 
-    layers_by_triangle = std::vector<std::vector<triangle_t>>();
-    int cumulative_height = layer_height_mm;
-    for (auto tri : triangles) {
-        auto max_z = std::max({tri.vertices[0].z, tri.vertices[1].z tri.vertices[1].z});
-        while
+    for (int i = 0; i < 3; ++i) {
+        vec3_t v0 = tri.vertices[i];
+        vec3_t v1 = tri.vertices[(i + 1) % 3];
+
+        // Check if the segment crosses the plane
+        if ((v0.z <= z_plane && v1.z >= z_plane) || (v0.z >= z_plane && v1.z <= z_plane)) {
+            float t = (z_plane - v0.z) / (v1.z - v0.z);
+            float x = v0.x + t * (v1.x - v0.x);
+            float y = v0.y + t * (v1.y - v0.y);
+            intersection_pts.emplace_back(vec3_t{x, y});
+        }
     }
 
-    // above approach is not correct
-    // brute force is take minz and maxz for current layer height, and find all overlapping intervals
-    // once intervals are found, then intersection needs to be computed between triangle and z value, which can require interpolation
+    return intersection_pts;
+}
+
+
+void Mesh::populate_layer_lists(int layer_height_mm) {
+    // take minz and maxz for current layer height, and find all overlapping intervals
+    // once intervals are found, then intersection needs to be computed between triangle and z value
     size_t num_layers = static_cast<size_t>(MAX_PART_HEIGHT_MM / layer_height_mm);
-    layers_by_triangle = std::vector<std::vector<triangle_t>>(num_layers, std::vector<triangle_t>());
+    std::vector<std::vector<triangle_t>> layers_by_line_segment;
     for (triangle_t tri : this->triangles) {
         auto max_z = std::max({tri.vertices[0].z, tri.vertices[1].z tri.vertices[1].z});
         auto min_z = std::min({tri.vertices[0].z, tri.vertices[1].z tri.vertices[1].z});
-        auto start_layer = std::round(min_z * 10.0f) / 10.0f; // can't be lower than .1mm
-        auto end_layer = std::round(max_z * 10.0f) / 10.0f;
-        for (int i=start_layer; i<=end_layer; i++) {
-            // find intersecting pts ? is it even necessary to store which triangles belong to which layer?
+        auto start_layer = static_cast<int>(std::floor(min_z / layer_height_mm));
+        auto end_layer = static_cast<int>(std::ceil(max_z / layer_height_mm));
+        for (int l=start_layer; l<=end_layer; l++) {
+            // find intersecting pts
+            auto layer_z = l*layer_height_mm;
+            auto intersection_pts = this->intersect_triangle_with_plane(tri, layer_z);
+            layers_by_line_segment.push_back(intersection_pts);
         }
     }
+
+    // TODO: stitch together line segments for each layer
 }
