@@ -1,18 +1,28 @@
-#include "include/state_machine.hpp"
+#include "include/controller.hpp"
 
 
-int StateMachine::run()
-{
-    switch (this->state)
-    {
-        case EXECUTE_MOTION:
+// Controller::Controller() {
+//     // 
+// }
+
+
+// int Controller::run()
+// {
+//     // Start state machine thread
+
+//     // Based on internal state, launch or modify tasks
+
+
+//     switch (this->state)
+//     {
+//         case EXECUTE_MOTION:
             
-    }
-}
+//     }
+// }
 
 
 int main()
 {
-    StateMachine state_machine;
-    state_machine.run();
+    Controller main_controller;
+    controller.run();
 }

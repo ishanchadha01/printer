@@ -12,7 +12,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
-add_executable(test_stl tests/test_stl.cpp src/mesh.cpp)
+add_executable(test_stl tests/test_stl.cpp src/mesh.cpp src/main.cpp)
 target_include_directories(test_stl PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(test_stl gtest_main)
 

@@ -8,11 +8,13 @@
 
 class Mesh {
 public:
-    Mesh();
+    Mesh(const std::string cad_filepath);
     void slice_nonplanar(int layer_height_mm);
 
     // Planar, cartesian
     std::vector<vec3_t> points;
     std::vector<triangle_t> triangles; // sorted by layer max z-vals
-    std::vector<std::vector<triangle_t>> layers_by_triangle;
+
+    std::vector<vec3_t> intersect_triangle_with_plane(const triangle_t& tri, float z_plane);
+
 };

@@ -1,3 +1,5 @@
+#include "include/mesh.hpp"
+
 #include <filesystem>
 
 class PathPlan
@@ -6,12 +8,16 @@ class PathPlan
 public:
     PathPlan(std::filesystem::path cad_file);
 
-private:
     int plan_path();
 
-    int slice_planar();
-    int compute_infill();
-    int compute_brim();
+private:
 
-    std::unique_ptr<mesh_t> mesh;
+    std::vector<vec3_t> intersect_triangle_with_plane(const triangle_t& tri, float z_plane);
+    void populate_layer_lists(int layer_height_mm) {
+
+    // int slice_planar();
+    // int compute_infill();
+    // int compute_brim();
+
+    std::vector<mesh_t> meshes;
 }
