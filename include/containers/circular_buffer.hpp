@@ -2,6 +2,7 @@
 #include <mutex>
 #include <array>
 #include <optional>
+#include <functional>
 
 template<typename T, size_t BufferSize>
 class CircularBuffer
@@ -44,6 +45,30 @@ public:
             std::cerr << "Buffer is empty!\n";
             return std::nullopt;
         }
+        auto& old_front = _data[this->head];
+        this->head = ((this->head)+1) % BufferSize;
+        return std::move(old_front);
+    }
+
+    std::optional<std::reference_wrapper<T>> poll()
+    {
+        std::scoped_lock rw_lock(_rw_mutex);
+        if (this->head == this->tail) {
+            std::cerr << "Buffer is empty!\n";
+            return std::nullopt;
+        }
+        return std::ref(_data[this->head]);
+    }
+
+    std::optional<T> pop_if(std::function<bool(const T&)> cond_func)
+    {
+        std::scoped_lock rw_lock(_rw_mutex);
+        if (this->head == this->tail) {
+            std::cerr << "Buffer is empty!\n";
+            return std::nullopt;
+        }
+        if (!cond_func(_data[this->head])) return std::nullopt;
+
         auto& old_front = _data[this->head];
         this->head = ((this->head)+1) % BufferSize;
         return std::move(old_front);
