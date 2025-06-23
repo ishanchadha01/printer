@@ -7,13 +7,13 @@
 #include <type_traits>
 #include <cstring>
 
+#include "include/constants.hpp"
+
 // Num Task Bits
 template<size_t NumTaskBits>
 using TaskEncodedType = std::bitset<NumTaskBits>;
 
 // Use concept to tie together default task
-constexpr size_t DEFAULT_NUM_TASK_BITS = 64;
-constexpr size_t DEFAULT_BLOCK_SIZE = 2048;
 template<size_t NumTaskBits, size_t BlockSize>
 concept IsDefaultTask = (NumTaskBits == DEFAULT_NUM_TASK_BITS) && (BlockSize == DEFAULT_BLOCK_SIZE);
 
@@ -32,7 +32,7 @@ template<typename T, typename Variant>
 struct is_in_variant : std::false_type {};
 
 template<typename T, typename... Ts>
-struct is_in_variant<T, std::variant<Ts>...> : std::disjunction<std::is_same<T, Ts>...> {};
+struct is_in_variant<T, std::variant<Ts...>> : std::disjunction<std::is_same<T, Ts...>> {};
 
 template<typename T>
 concept IsDefaultTaskDataType = is_in_variant<T, DefaultTaskDataType>::value;
@@ -56,7 +56,7 @@ struct DefaultDataPacket
     void insert(const int& i, const TaskT& data)
     {
         // convert to bitset manually
-        using StrippedT = std::decay(TaskT);
+        using StrippedT = std::decay<TaskT>::type;
         uint64_t raw = 0;
         if constexpr (std::is_same<StrippedT, double>::value) {
             data_array_types[i] = static_cast<uint8_t>(DefaultTaskId::DOUBLE);
@@ -68,7 +68,7 @@ struct DefaultDataPacket
             data_array_types[i] = static_cast<uint8_t>(DefaultTaskId::CHAR_ARR);
             std::memcpy(&raw, data.data(), sizeof(uint64_t)); // std doesnt guarantee &data == &data[0] ??
         } else {
-            static_assert(std::is_same<TaskT, TaskT>::value, "Unsupported type for Default Task!")
+            static_assert(std::is_same<TaskT, TaskT>::value, "Unsupported type for Default Task!");
         }
         data_array[i] = std::bitset<NumTaskBits>(raw);
     }

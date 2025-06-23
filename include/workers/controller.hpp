@@ -1,18 +1,22 @@
 #include "include/containers/data_packet.hpp"
 #include "include/containers/worker_thread.hpp"
 #include "include/containers/circular_buffer.hpp"
+#include "include/containers/state_machine.hpp"
 
 #include "include/constants.hpp"
 
 
 constexpr int8_t ControllerTaskIdx = -1;
 
-template<StateMachine StateMachineType>
+using DefaultDataPacketT = DefaultDataPacket<DEFAULT_NUM_TASK_BITS, DEFAULT_BLOCK_SIZE>;
+
 class Controller
 {
 public:
     Controller() {
-        state_machine = std::make_unique<StateMachineType>(this->request_worker);
+        state_machine = std::make_unique<StateMachine>([this] () {
+            this->request_worker();
+        });
     };
     void run();
 
@@ -36,11 +40,10 @@ private:
         return thread_pool[thread_pool_size++];
     }
 
-    void release_worker(const DataPacket& popped_task) {
+    void release_worker(const DefaultDataPacketT& task_data) {
         // signal from thread to release worker from task popped from buffer
         // if id is -1 then packet is for controller, and the first term in packet is reserved keyword JOIN
-        std::scoped_lock(_thread_pool_mutex);
-        auto& task_data = popped_task.second;
+        std::scoped_lock release_worker_lock(_thread_pool_mutex);
         if (task_data.data_array_types[0] == static_cast<uint8_t>(DefaultTaskId::INT)
             && task_data.data_array[0].to_ulong() == static_cast<uint64_t>(CmdId::ReleaseWorker)
             && task_data.data_array_types[1] == static_cast<uint8_t>(DefaultTaskId::INT)) {
@@ -56,11 +59,11 @@ private:
     void task_buffer_dispatcher_loop() {
         while(true) {
             // Check if worker release request, its the only request received right now by controller
-            auto packet = task_buffer.pop_if([](const auto& top) {
+            auto packet = task_buffer->pop_if([](const auto& top) {
                 return top.first == ControllerTaskIdx;
             });
             if (packet.has_value()) {
-                release_worker(packet);
+                release_worker(packet.value().second);
             }
             
             // timeout, TODO: make configurable
@@ -71,8 +74,8 @@ private:
     // TaskQueue
     // enqueue a shared ptr to data packet that needs to be sent or received
     // int corresponding to who the msg is meant for
-    std::shared_ptr<CircularBuffer< std::pair<int, DefaultDataPacket>, THREAD_POOL_CAPACITY >> task_buffer;
+    std::shared_ptr<CircularBuffer< std::pair<int, DefaultDataPacketT>, THREAD_POOL_CAPACITY >> task_buffer;
 
     // StateMachine type
-    std::unique_ptr<StateMachineType> state_machine; 
+    std::unique_ptr<StateMachine> state_machine; 
 };
