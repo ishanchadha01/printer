@@ -4,22 +4,21 @@
 class StateMachine
 {
 public:
-    StateMachine() {}
-    virtual ~StateMachine((WorkerThread&)(std::function<void>) request_worker_callback) {}
+    StateMachine(std::function<std::shared_ptr<WorkerThread>()> request_worker_callback)
+        : _request_worker_callback(request_worker_callback) {}
+    virtual ~StateMachine() = default;
 
-    bool request_worker() {
-        WorkerThreadThread& worker = request_worker_callback();
+    auto request_worker() {
+        return _request_worker_callback();
     }
+
+private:
+    std::function<std::shared_ptr<WorkerThread>()> _request_worker_callback;
 
 };
 
 class BasicStateMachine : public StateMachine
 {
 public:
-    BasicStateMachine() : StateMachine() {
-
-    }
-
-
-
-}
+    BasicStateMachine(std::function<std::shared_ptr<WorkerThread>()> cb) : StateMachine(cb) {}
+};

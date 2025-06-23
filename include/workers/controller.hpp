@@ -1,21 +1,3 @@
-
-// include macros - ramps, gcodes
-
-
-// look at marlin stepper and planner
-
-// A+B moves diagonal, -A-B moves diagonal
-// A-B or B-A moves one  direction
-
-// is given initial gcode
-// modifies gcode based on sensed data
-
-
-// #define SET_TO_ZERO(a) memset(a, 0, sizeof(a))
-
-// constexpr uint8_t CMD_QUEUE_SIZE = 128;
-// constexpr uint8_t CMD_QUEUE[CMD_QUEUE_SIZE];
-
 #include "include/containers/data_packet.hpp"
 #include "include/containers/worker_thread.hpp"
 #include "include/containers/circular_buffer.hpp"

@@ -1,3 +1,14 @@
+
+// include macros - ramps, gcodes
+
+// look at marlin stepper and planner
+
+// A+B moves diagonal, -A-B moves diagonal
+// A-B or B-A moves one  direction
+
+// is given initial gcode
+// modifies gcode based on sensed data
+
 #include "include/mesh.hpp"
 
 #include <filesystem>
