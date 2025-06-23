@@ -21,4 +21,6 @@ class BasicStateMachine : public StateMachine
 {
 public:
     BasicStateMachine(std::function<std::shared_ptr<WorkerThread>()> cb) : StateMachine(cb) {}
+
+    void run() {}
 };

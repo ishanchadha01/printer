@@ -45,7 +45,6 @@ struct DefaultDataPacket
     std::array< std::bitset<NumTaskBits>, BlockSize> data_array; // bitfield and cast to/from value specified
     std::array<uint8_t, BlockSize> data_array_types; // which one of variant fields is being used
     size_t data_array_size = 0;
-    std::atomic<bool> ready = false;
 
     constexpr void reset() {
         data_array.fill(static_cast<std::bitset<NumTaskBits>>(0));

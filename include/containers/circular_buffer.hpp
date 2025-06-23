@@ -71,9 +71,9 @@ public:
         }
         if (!cond_func(_data[this->head])) return std::nullopt;
 
-        auto& old_front = _data[this->head];
-        this->head = ((this->head)+1) % BufferSize;
-        return std::move(old_front);
+        T result = std::move(_data[this->head]);
+        this->head = (this->head + 1) % BufferSize;
+        return result;
     }
     
 

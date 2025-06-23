@@ -14,11 +14,13 @@ class Controller
 {
 public:
     Controller() {
-        state_machine = std::make_unique<StateMachine>([this] () {
-            this->request_worker();
+        state_machine = std::make_unique<BasicStateMachine>([this] () {
+            return this->request_worker();
         });
     };
-    void run();
+    void run() {
+        state_machine->run();
+    };
 
 private:
 
@@ -77,5 +79,5 @@ private:
     std::shared_ptr<CircularBuffer< std::pair<int, DefaultDataPacketT>, THREAD_POOL_CAPACITY >> task_buffer;
 
     // StateMachine type
-    std::unique_ptr<StateMachine> state_machine; 
+    std::unique_ptr<BasicStateMachine> state_machine; 
 };
