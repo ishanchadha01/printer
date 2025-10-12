@@ -20,7 +20,7 @@ public:
 
     bool emplace(T&& data)
     {
-        std::scoped_lock rw_lock(_rw_mutex);
+        std::unique_lock rw_lock(_rw_mutex);
         buffer_full_cv.wait(rw_lock, [this] {
             return this->size < this->capacity;
         });
@@ -33,7 +33,7 @@ public:
 
     bool push(const T& data)
     {
-        std::scoped_lock rw_lock(_rw_mutex);
+        std::unique_lock rw_lock(_rw_mutex);
         buffer_full_cv.wait(rw_lock, [this] {
             return this->size < this->capacity;
         });
@@ -46,7 +46,7 @@ public:
 
     std::optional<T> pop()
     {
-        std::scoped_lock rw_lock(_rw_mutex);
+        std::unique_lock rw_lock(_rw_mutex);
         buffer_empty_cv.wait(rw_lock, [this] {
             return this->size > 0;
         });
@@ -60,7 +60,7 @@ public:
 
     std::optional<std::reference_wrapper<T>> poll()
     {
-        std::scoped_lock rw_lock(_rw_mutex);
+        std::unique_lock rw_lock(_rw_mutex);
         if (this->head == this->tail) {
             std::cerr << "Buffer is empty!\n";
             return std::nullopt;
@@ -70,7 +70,7 @@ public:
 
     std::optional<T> pop_if(std::function<bool(const T&)> cond_func)
     {
-        std::scoped_lock rw_lock(_rw_mutex);
+        std::unique_lock rw_lock(_rw_mutex);
         buffer_empty_cv.wait(rw_lock, [this] {
             return size > 0;
         });

@@ -1,8 +1,8 @@
-#include "include/path_plan.hpp"
+#include "include/workers/path_plan.hpp"
 
 
-PathPlan(std::filesystem::path cad_file) {
-    this->meshes = read_stl_ascii(cad_filepath);
+void PathPlanner::set_cad(std::filesystem::path cad_file) {
+    this->meshes = read_stl_ascii(cad_file);
 }
 
 

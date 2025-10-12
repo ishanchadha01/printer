@@ -1,3 +1,5 @@
+#pragma once
+
 #include <concepts>
 #include <variant>
 #include <array>
@@ -70,5 +72,6 @@ struct DefaultDataPacket
             static_assert(std::is_same<TaskT, TaskT>::value, "Unsupported type for Default Task!");
         }
         data_array[i] = std::bitset<NumTaskBits>(raw);
+        data_array_size++;
     }
 };

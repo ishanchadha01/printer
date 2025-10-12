@@ -1,28 +1,46 @@
 #include "include/containers/data_packet.hpp"
 #include "include/containers/worker_thread.hpp"
 #include "include/containers/circular_buffer.hpp"
-#include "include/containers/state_machine.hpp"
+// #include "include/containers/state_machine.hpp"
+
+#include "include/workers/path_plan.hpp"
 
 #include "include/constants.hpp"
 
 
-constexpr int8_t ControllerTaskIdx = -1;
-
-using DefaultDataPacketT = DefaultDataPacket<DEFAULT_NUM_TASK_BITS, DEFAULT_BLOCK_SIZE>;
-
 class Controller
 {
 public:
-    Controller() {
-        state_machine = std::make_unique<BasicStateMachine>([this] () {
-            return this->request_worker();
-        });
-    };
+    Controller() {};
+
     void run() {
-        state_machine->run();
+        switch (static_cast<States>(this->curr_state)) {
+            case States::INIT: {
+                
+            }
+            break;
+
+            case States::PLAN: {
+                std::shared_ptr<PathPlanner> path_planner = this->request_worker<PathPlanner>();
+            }
+            break;
+
+            case States::EXECUTE: {
+
+            }
+            break;
+
+            // case default: {
+                
+            // }
+            // break;
+        }
+        this->prev_state = this->curr_state;
     };
 
-private:
+    size_t get_thread_pool_size() {
+        return this->thread_pool_size;
+    };
 
     // ThreadPool
     // idle threads for large lifetime processes to be executed on
@@ -31,7 +49,8 @@ private:
     std::mutex _thread_pool_mutex;
     std::condition_variable _thread_pool_cv;
 
-    std::shared_ptr<WorkerThread> request_worker() {
+    template <ConcreteWorker T, typename... Args>
+    std::shared_ptr<T> request_worker(Args&&... extra_args) {
         std::unique_lock<std::mutex> req_worker_lock(_thread_pool_mutex);
         _thread_pool_cv.wait(req_worker_lock, [this] {
             if (this->thread_pool_size == THREAD_POOL_CAPACITY) {
@@ -39,7 +58,11 @@ private:
             }
             return this->thread_pool_size < THREAD_POOL_CAPACITY;
         });
-        return thread_pool[thread_pool_size++];
+
+        const size_t idx = thread_pool_size++;
+        auto task_ptr = std::make_shared<T>(idx, this->task_buffer);
+        thread_pool[idx] = task_ptr;
+        return task_ptr;
     }
 
     void release_worker(const DefaultDataPacketT& task_data) {
@@ -54,9 +77,14 @@ private:
             if (idx < thread_pool_size && thread_pool_size > 1) {
                 swap(thread_pool[idx], thread_pool[--thread_pool_size]); // maintain contiguity of array
             }
+            // Set old shared ptr to null ptr to release memory
+            thread_pool[thread_pool_size + 1] = nullptr;
             _thread_pool_cv.notify_one();
         }
     }
+
+
+private:
 
     void task_buffer_dispatcher_loop() {
         while(true) {
@@ -76,8 +104,9 @@ private:
     // TaskQueue
     // enqueue a shared ptr to data packet that needs to be sent or received
     // int corresponding to who the msg is meant for
-    std::shared_ptr<CircularBuffer< std::pair<int, DefaultDataPacketT>, THREAD_POOL_CAPACITY >> task_buffer;
+    std::shared_ptr<DefaultBuffer> task_buffer;
 
-    // StateMachine type
-    std::unique_ptr<BasicStateMachine> state_machine; 
+    // State machine tracking
+    int curr_state = 0;
+    int prev_state = 0;
 };

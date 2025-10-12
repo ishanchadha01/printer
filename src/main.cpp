@@ -5,4 +5,4 @@ int main()
 {
     Controller main_controller;
     main_controller.run();
-}
+};

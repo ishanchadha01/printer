@@ -24,7 +24,7 @@ FetchContent_MakeAvailable(googletest)
 # target_include_directories(test_stl PRIVATE ${PROJECT_SOURCE_DIR})
 # target_link_libraries(test_stl gtest_main)
 
-add_executable(test_controller src/main.cpp)
+add_executable(test_controller src/main.cpp src/path_plan.cpp src/mesh.cpp)
 target_include_directories(test_controller PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(test_controller gtest_main)
 

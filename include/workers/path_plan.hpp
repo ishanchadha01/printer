@@ -9,26 +9,32 @@
 // is given initial gcode
 // modifies gcode based on sensed data
 
-#include "include/mesh.hpp"
+#include "include/containers/mesh.hpp"
+#include "include/containers/worker_thread.hpp"
 
 #include <filesystem>
 
-class PathPlan
+class PathPlanner : public WorkerThread
 {
 
 public:
-    PathPlan(std::filesystem::path cad_file);
+    PathPlanner(uint8_t id, std::shared_ptr<DefaultBuffer> buffer) :
+        WorkerThread(id, std::move(buffer)) {};
 
-    int plan_path();
+    void set_cad(std::filesystem::path cad_file);
+
+    // int plan_path();
+
+    void run() override {};
 
 private:
 
-    std::vector<vec3_t> intersect_triangle_with_plane(const triangle_t& tri, float z_plane);
-    void populate_layer_lists(int layer_height_mm) {
+    // std::vector<vec3_t> intersect_triangle_with_plane(const triangle_t& tri, float z_plane);
+    // void populate_layer_lists(int layer_height_mm);
 
     // int slice_planar();
     // int compute_infill();
     // int compute_brim();
 
-    std::vector<mesh_t> meshes;
-}
+    std::vector<Mesh> meshes;
+};
