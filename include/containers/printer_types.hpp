@@ -34,11 +34,11 @@ enum class state_t {
 struct vec3_t {
     float x,y,z;
 
-    vec3_t operator+(vec3_t& other) const {
+    vec3_t operator+(const vec3_t& other) const {
         return {x+other.x, y+other.y, z+other.z};
     }
 
-    vec3_t operator-(vec3_t& other) const {
+    vec3_t operator-(const vec3_t& other) const {
         return {x-other.x, y-other.y, z-other.z};
     }
 
@@ -71,6 +71,7 @@ struct vec3_t {
 
     vec3_t normalize() {
         auto _norm = norm();
+        if (_norm == 0) return *this;
         x /= _norm;
         y /= _norm;
         z /= _norm;

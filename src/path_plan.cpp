@@ -3,7 +3,7 @@
 
 
 void PathPlanner::set_cad(std::filesystem::path cad_file) {
-    this->meshes = read_stl_ascii(cad_file);
+    this->meshes = read_stl_ascii(cad_file.string());
 }
 
 
@@ -44,7 +44,7 @@ void Mesh::populate_layer_lists(int layer_height_mm) {
     // take minz and maxz for current layer height, and find all overlapping intervals
     // once intervals are found, then intersection needs to be computed between triangle and z value
     size_t num_layers = static_cast<size_t>(MAX_PART_HEIGHT_MM / layer_height_mm);
-    std::vector<std::vector<vec3_t>> layers_by_line_segment;
+    std::vector<std::vector<vec3_t>> layers_by_line_segment(num_layers);
     for (triangle_t tri : this->triangles) {
         float z0 = points[tri.vertices[0]].z;
         float z1 = points[tri.vertices[1]].z;
@@ -62,7 +62,10 @@ void Mesh::populate_layer_lists(int layer_height_mm) {
         for (int l=start_layer; l<=end_layer; l++) {
             auto layer_z = l*layer_height_mm;
             auto intersection_pts = this->intersect_triangle_with_plane(tri, layer_z);
-            layers_by_line_segment.push_back(intersection_pts);
+            auto& layer = layers_by_line_segment[l];
+            if (!intersection_pts.empty()) {
+                layer.insert(layer.end(), intersection_pts.begin(), intersection_pts.end());
+            }
         }
     }
 

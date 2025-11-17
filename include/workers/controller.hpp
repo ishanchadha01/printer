@@ -1,42 +1,59 @@
 #include "include/containers/data_packet.hpp"
 #include "include/containers/worker_thread.hpp"
 #include "include/containers/circular_buffer.hpp"
-// #include "include/containers/state_machine.hpp"
 
 #include "include/workers/path_plan.hpp"
 
 #include "include/constants.hpp"
 
+#include <chrono>
+
 
 class Controller
 {
 public:
-    Controller() {};
+    Controller()
+        : task_buffer(std::make_shared<DefaultBuffer>()) ,
+          dispatcher_thread(&Controller::task_buffer_dispatcher_loop, this)
+    {}
+
+    ~Controller() = default;
 
     void run() {
-        switch (static_cast<States>(this->curr_state)) {
-            case States::INIT: {
-                
+        while (static_cast<States>(curr_state) != States::SHUTDOWN) {
+            switch (static_cast<States>(curr_state)) {
+                case States::INIT: {
+                    curr_state = static_cast<int>(States::PLAN);
+                } break;
+
+                case States::PLAN: {
+                    auto path_planner = this->request_worker<PathPlanner>();
+                    curr_state = static_cast<int>(States::EXECUTE);
+                } break;
+
+                case States::EXECUTE: {
+                    curr_state = static_cast<int>(States::SHUTDOWN);
+                } break;
+
+                case States::EXECUTE_ERROR:
+                case States::PLAN_ERROR:
+                case States::INIT_ERROR: {
+                    curr_state = static_cast<int>(States::SHUTDOWN);
+                } break;
+
+                case States::SHUTDOWN: {
+                    // loop will exit next iteration
+                } break;
             }
-            break;
 
-            case States::PLAN: {
-                std::shared_ptr<PathPlanner> path_planner = this->request_worker<PathPlanner>();
-            }
-            break;
-
-            case States::EXECUTE: {
-
-            }
-            break;
-
-            // case default: {
-                
-            // }
-            // break;
+            prev_state = curr_state;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
-        this->prev_state = this->curr_state;
-    };
+    }
+
+    void request_shutdown() {
+        curr_state = static_cast<int>(States::SHUTDOWN);
+    }
 
     size_t get_thread_pool_size() {
         return this->thread_pool_size;
@@ -52,15 +69,17 @@ public:
     template <ConcreteWorker T, typename... Args>
     std::shared_ptr<T> request_worker(Args&&... extra_args) {
         std::unique_lock<std::mutex> req_worker_lock(_thread_pool_mutex);
-        _thread_pool_cv.wait(req_worker_lock, [this] {
-            if (this->thread_pool_size == THREAD_POOL_CAPACITY) {
-                std::cerr << "Threadpool fully in use. Waiting for available thread...";
-            }
-            return this->thread_pool_size < THREAD_POOL_CAPACITY;
-        });
+        while (this->thread_pool_size == THREAD_POOL_CAPACITY) {
+            std::cerr << "Threadpool fully in use. Waiting for available thread...\n";
+            _thread_pool_cv.wait(req_worker_lock);
+        }
 
         const size_t idx = thread_pool_size++;
         auto task_ptr = std::make_shared<T>(idx, this->task_buffer);
+        std::jthread task_thread([worker = task_ptr]() {
+            worker->run();
+        });
+        task_ptr->set_thread(std::move(task_thread));
         thread_pool[idx] = task_ptr;
         return task_ptr;
     }
@@ -74,12 +93,15 @@ public:
             && task_data.data_array_types[1] == static_cast<uint8_t>(DefaultTaskId::INT)) {
             
             size_t idx = static_cast<size_t>(task_data.data_array[1].to_ulong());
-            if (idx < thread_pool_size && thread_pool_size > 1) {
-                swap(thread_pool[idx], thread_pool[--thread_pool_size]); // maintain contiguity of array
+            if (idx < thread_pool_size && thread_pool_size > 0) {
+                std::size_t last = thread_pool_size-1;
+                if (idx != last) {
+                    swap(thread_pool[idx], thread_pool[last]); // maintain contiguity of array
+                }
+                thread_pool[last].reset(); // release memory
+                --thread_pool_size;
+                _thread_pool_cv.notify_one();
             }
-            // Set old shared ptr to null ptr to release memory
-            thread_pool[thread_pool_size + 1] = nullptr;
-            _thread_pool_cv.notify_one();
         }
     }
 
@@ -105,8 +127,9 @@ private:
     // enqueue a shared ptr to data packet that needs to be sent or received
     // int corresponding to who the msg is meant for
     std::shared_ptr<DefaultBuffer> task_buffer;
+    std::jthread dispatcher_thread;
 
     // State machine tracking
-    int curr_state = 0;
-    int prev_state = 0;
+    int curr_state = static_cast<int>(States::INIT);
+    int prev_state = static_cast<int>(States::INIT);
 };

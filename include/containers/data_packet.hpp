@@ -21,7 +21,7 @@ concept IsDefaultTask = (NumTaskBits == DEFAULT_NUM_TASK_BITS) && (BlockSize == 
 
 using DefaultTaskDataType = std::variant< 
                         std::array<char, 8>,
-                        long int,
+                        std::int64_t,
                         double>;
 
 enum class DefaultTaskId : uint8_t {
@@ -34,7 +34,8 @@ template<typename T, typename Variant>
 struct is_in_variant : std::false_type {};
 
 template<typename T, typename... Ts>
-struct is_in_variant<T, std::variant<Ts...>> : std::disjunction<std::is_same<T, Ts...>> {};
+struct is_in_variant<T, std::variant<Ts...>>
+    : std::disjunction<std::is_same<std::decay_t<T>, Ts>...> {};
 
 template<typename T>
 concept IsDefaultTaskDataType = is_in_variant<T, DefaultTaskDataType>::value;
@@ -50,6 +51,7 @@ struct DefaultDataPacket
 
     constexpr void reset() {
         data_array.fill(static_cast<std::bitset<NumTaskBits>>(0));
+        data_array_types.fill(0);
         data_array_size = 0;
     }
 
@@ -62,7 +64,7 @@ struct DefaultDataPacket
         if constexpr (std::is_same<StrippedT, double>::value) {
             data_array_types[i] = static_cast<uint8_t>(DefaultTaskId::DOUBLE);
             std::memcpy(&raw, &data, sizeof(uint64_t));
-        } else if constexpr (std::is_same<StrippedT, long int>::value) {
+        } else if constexpr (std::is_same<StrippedT, std::int64_t>::value) {
             data_array_types[i] = static_cast<uint8_t>(DefaultTaskId::INT);
             std::memcpy(&raw, &data, sizeof(uint64_t));
         } else if constexpr (std::is_same_v<StrippedT, std::array<char, 8>>) {

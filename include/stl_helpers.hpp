@@ -13,6 +13,8 @@
 #include <array>
 #include <vector>
 #include <exception>
+#include <unordered_map>
+#include <memory>
 
 
 inline bool is_stl_ascii(const std::string filename)
@@ -51,7 +53,11 @@ std::vector<Mesh> read_stl_ascii(const std::string filename) {
 	while (std::getline(input, line_string)) {
 		int idx = 0;
 		std::istringstream line_stream(line_string);
-		while (line_stream >> words[idx]) idx++;
+
+		// stream up to 5 words, dont overrun if there's comments or weird end chars
+		while (idx < static_cast<int>(words.size()) && (line_stream >> words[idx])) {
+			idx++;
+		}
 		if (idx == 0) continue;
 		
 		if (words[0] == "solid") {

@@ -5,6 +5,7 @@
 #include <array>
 #include <optional>
 #include <functional>
+#include <condition_variable>
 
 template<typename T, size_t BufferSize>
 class CircularBuffer
@@ -15,14 +16,13 @@ public:
         this->head = 0;
         this->tail = 0;
         this->size = 0;
-        this->capacity = BufferSize;
     };
 
     bool emplace(T&& data)
     {
         std::unique_lock rw_lock(_rw_mutex);
         buffer_full_cv.wait(rw_lock, [this] {
-            return this->size < this->capacity;
+            return this->size < BufferSize;
         });
         _data[this->tail] = std::move(data);
         this->tail = ((this->tail)+1) % BufferSize;
@@ -35,7 +35,7 @@ public:
     {
         std::unique_lock rw_lock(_rw_mutex);
         buffer_full_cv.wait(rw_lock, [this] {
-            return this->size < this->capacity;
+            return this->size < BufferSize;
         });
         _data[this->tail] = data;
         this->tail = ((this->tail)+1) % BufferSize;
@@ -61,7 +61,7 @@ public:
     std::optional<std::reference_wrapper<T>> poll()
     {
         std::unique_lock rw_lock(_rw_mutex);
-        if (this->head == this->tail) {
+        if (this->size == 0) {
             std::cerr << "Buffer is empty!\n";
             return std::nullopt;
         }
@@ -88,7 +88,6 @@ private:
     size_t head;
     size_t tail;
     size_t size;
-    size_t capacity;
     std::mutex _rw_mutex;
     std::condition_variable buffer_full_cv;
     std::condition_variable buffer_empty_cv;

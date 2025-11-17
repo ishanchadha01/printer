@@ -7,7 +7,7 @@
 #include <thread>
 
 using DefaultBuffer = CircularBuffer< 
-    std::pair< uint8_t, DefaultDataPacket<DEFAULT_NUM_TASK_BITS, DEFAULT_BLOCK_SIZE>  >, 
+    std::pair< TaskId, DefaultDataPacket<DEFAULT_NUM_TASK_BITS, DEFAULT_BLOCK_SIZE>  >, 
     THREAD_POOL_CAPACITY >;
 
 using DefaultDataPacketT = DefaultDataPacket<DEFAULT_NUM_TASK_BITS, DEFAULT_BLOCK_SIZE>;
@@ -15,15 +15,10 @@ using DefaultDataPacketT = DefaultDataPacket<DEFAULT_NUM_TASK_BITS, DEFAULT_BLOC
 class WorkerThread
 {
 public:
-    WorkerThread(uint8_t id, std::shared_ptr<DefaultBuffer> buffer)
+    WorkerThread(TaskId id, std::shared_ptr<DefaultBuffer> buffer)
         : _id(id), task_buffer(buffer) {}
 
-    virtual ~WorkerThread() 
-    {
-        if (this->_thread.joinable()) {
-            this->_thread.join();
-        }
-    }
+    virtual ~WorkerThread() = default;
 
     virtual void run() = 0;
 
@@ -32,7 +27,7 @@ public:
         this->_thread = std::move(thread);
     }
 
-    void send_data(DefaultDataPacketT packet, int recipient_id)
+    void send_data(DefaultDataPacketT packet, TaskId recipient_id)
     {
         this->task_buffer->emplace({recipient_id, packet});
     }
@@ -42,15 +37,14 @@ public:
     WorkerThread(const WorkerThread& thread) = delete;
 
 
-    uint8_t get_id()
+    TaskId get_id()
     {
         return this->_id;
     }
 
 private:
-    uint8_t _id;
+    TaskId _id;
     std::jthread _thread;
-    size_t _buffer_size;
     std::shared_ptr<DefaultBuffer> task_buffer;
 };
 
