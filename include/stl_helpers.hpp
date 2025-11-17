@@ -1,7 +1,7 @@
 #pragma once
 
-#include "include/printer_types.hpp"
-#include "include/mesh.hpp"
+#include "include/containers/printer_types.hpp"
+#include "include/containers/mesh.hpp"
 
 #include <fstream>
 #include <string>
@@ -104,17 +104,18 @@ std::vector<Mesh> read_stl_ascii(const std::string filename) {
 
 //TODO: finish read stl binary
 Mesh read_stl_binary(const std::string filename) {
-	Mesh solid;
+	// Mesh solid;
 	
-	std::ifstream input(filename, std::ios::binary);
+	// std::ifstream input(filename, std::ios::binary);
 
-	char stl_header[80];
-	input.read(stl_header, 80);
+	// char stl_header[80];
+	// input.read(stl_header, 80);
 
-	int num_triangles = 0;
-  	input.read((char*) &num_triangles, 4);
-	solid.triangles.resize(num_triangles);
+	// int num_triangles = 0;
+  	// input.read((char*) &num_triangles, 4);
+	// solid.triangles.resize(num_triangles);
 
-	// TODO: implement rest of binary parsing with same output format as ascii
-	return solid;
+	// // TODO: implement rest of binary parsing with same output format as ascii
+	// return solid;
+	return Mesh("");
 }
