@@ -81,6 +81,27 @@ public:
         buffer_full_cv.notify_one();
         return result;
     }
+
+    // for controller dispatcher so we can exit main process
+    std::optional<T> try_pop_if(std::function<bool(const T&)> cond_func)
+    {
+        std::lock_guard<std::mutex> rw_lock(_rw_mutex);
+
+        if (size == 0) {
+            return std::nullopt;
+        }
+
+        if (!cond_func(_data[head])) {
+            return std::nullopt;
+        }
+
+        T result = std::move(_data[head]);
+        head = (head + 1) % BufferSize;
+        --size;
+        buffer_full_cv.notify_one();
+        return result;
+    }
+
     
 
 private:

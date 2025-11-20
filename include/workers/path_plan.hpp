@@ -9,6 +9,8 @@
 // is given initial gcode
 // modifies gcode based on sensed data
 
+#pragma once
+
 #include "include/containers/mesh.hpp"
 #include "include/containers/worker_thread.hpp"
 

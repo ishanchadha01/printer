@@ -13,7 +13,7 @@ constexpr size_t DEFAULT_BLOCK_SIZE = 2048;
 using TaskId = std::int8_t;
 constexpr TaskId ControllerTaskIdx = -1;
 
-enum class CmdId : uint64_t
+enum class CmdId : std::int64_t
 {
     ReleaseWorker = 1
 };

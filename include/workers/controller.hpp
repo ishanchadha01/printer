@@ -7,14 +7,17 @@
 #include "include/constants.hpp"
 
 #include <chrono>
+#include <stop_token>
 
 
 class Controller
 {
 public:
-    Controller()
-        : task_buffer(std::make_shared<DefaultBuffer>()) ,
-          dispatcher_thread(&Controller::task_buffer_dispatcher_loop, this)
+    Controller() :
+            task_buffer(std::make_shared<DefaultBuffer>()),
+            dispatcher_thread([this](std::stop_token st) {
+                task_buffer_dispatcher_loop(st);
+            })
     {}
 
     ~Controller() = default;
@@ -108,18 +111,20 @@ public:
 
 private:
 
-    void task_buffer_dispatcher_loop() {
-        while(true) {
-            // Check if worker release request, its the only request received right now by controller
-            auto packet = task_buffer->pop_if([](const auto& top) {
+    void task_buffer_dispatcher_loop(std::stop_token st) {
+        while(!st.stop_requested()) {
+            // check if worker release request, its the only request received right now by controller
+            // non-blocking try_pop_if
+            auto packet = task_buffer->try_pop_if([](const auto& top) {
                 return top.first == ControllerTaskIdx;
             });
+
             if (packet.has_value()) {
-                release_worker(packet.value().second);
+                release_worker(packet->second);
             }
             
             // timeout, TODO: make configurable
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     }
 
