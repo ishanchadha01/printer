@@ -33,7 +33,7 @@ inline bool is_stl_ascii(const std::string filename)
 }
 
 
-std::vector<Mesh> read_stl_ascii(const std::string filename) {
+inline std::vector<Mesh> read_stl_ascii(const std::string filename) {
 
 	std::ifstream input(filename);
 	std::string line_string;
@@ -109,7 +109,7 @@ std::vector<Mesh> read_stl_ascii(const std::string filename) {
 }
 
 
-Mesh read_stl_binary(const std::string filename) {
+inline Mesh read_stl_binary(const std::string filename) {
 
 	// binary STL format:
 	// [80 byte header][uint32 num_triangles][per-triangle: 12 floats + uint16 attribute]

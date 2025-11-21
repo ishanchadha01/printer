@@ -21,6 +21,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+# make pybind11 use CMake FindPython3 instead of FindPythonLibs
+set(PYBIND11_FINDPYTHON ON CACHE BOOL "" FORCE)
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+
+add_subdirectory(extern/pybind11)
+
 # add_executable(test_stl tests/test_stl.cpp src/mesh.cpp src/main.cpp)
 # target_include_directories(test_stl PRIVATE ${PROJECT_SOURCE_DIR})
 # target_link_libraries(test_stl gtest_main)
@@ -35,3 +41,7 @@ target_link_libraries(test_controller gtest_main)
 include(GoogleTest)
 gtest_discover_tests(test_stl)
 gtest_discover_tests(test_controller)
+
+pybind11_add_module(pathplan_bindings visualization/pathplan_bindings.cpp src/path_plan.cpp)
+target_include_directories(pathplan_bindings PRIVATE ${PROJECT_SOURCE_DIR})
+target_link_libraries(pathplan_bindings PRIVATE Boost::boost)

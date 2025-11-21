@@ -1,3 +1,22 @@
+
+Build instructions:
+```
+mkdir build
+cd build
+cmake ..
+make
+ctest // If you want to run unit tests
+```
+
+For path visualization:
+```
+python visualization/visualize_path.py tests/data/torus_ascii.stl \
+  --layer-height 1.4 --layer 7 --show-mesh --show-raw-intersections \
+  --show-contours --color-intersecting-tris --list-intersecting-tris \
+  --module-path build
+```
+
+
 # Goal
 Create a self-sustaining, multi-end effector system with different modes of actuation for managing a garden
 
@@ -20,15 +39,12 @@ Create a self-sustaining, multi-end effector system with different modes of actu
 # Planning
 ## completed
 - vector and triangle primitives
-- stl parser
+- stl parser for ascii and binary
 - compute line segments of intersecting mesh triangles with each layer
+- matplotlib-based pybinded visualization tool
 
 ## todo
-- binary stl parser
 - contouring to turn each layer into path
-- path visualization tool
-
-## todo
 
 
 # Sensing
