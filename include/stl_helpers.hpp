@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cctype>
 #include <climits>
+#include <cstdint>
 #include <sstream>
 #include <iostream>
 #include <array>
@@ -108,20 +109,69 @@ std::vector<Mesh> read_stl_ascii(const std::string filename) {
 }
 
 
-//TODO: finish read stl binary
 Mesh read_stl_binary(const std::string filename) {
-	// Mesh solid;
-	
-	// std::ifstream input(filename, std::ios::binary);
 
-	// char stl_header[80];
-	// input.read(stl_header, 80);
+	// binary STL format:
+	// [80 byte header][uint32 num_triangles][per-triangle: 12 floats + uint16 attribute]
+	std::ifstream input(filename, std::ios::binary);
+	if (!input) {
+		throw std::runtime_error("Failed to open STL file");
+	}
 
-	// int num_triangles = 0;
-  	// input.read((char*) &num_triangles, 4);
-	// solid.triangles.resize(num_triangles);
+	char header[80];
+	input.read(header, sizeof(header)); // ignore header contents
 
-	// // TODO: implement rest of binary parsing with same output format as ascii
-	// return solid;
-	return Mesh("");
+	uint32_t triangle_count = 0;
+	input.read(reinterpret_cast<char*>(&triangle_count), sizeof(triangle_count));
+	if (!input) {
+		throw std::runtime_error("Failed to read triangle count");
+	}
+
+	Mesh mesh;
+	std::unordered_map<std::size_t, std::pair<vec3_t, uint32_t>> point_set;
+	boost::hash<vec3_t> point_hasher;
+	std::array<vec3_t, 3> current_vertices;
+
+	for (uint32_t i = 0; i < triangle_count; ++i) {
+		triangle_t tri;
+
+		float normal[3];
+		input.read(reinterpret_cast<char*>(normal), sizeof(normal));
+		if (!input) throw std::runtime_error("Unexpected EOF while reading normal");
+		tri.normal_vec = {normal[0], normal[1], normal[2]};
+
+		for (int v = 0; v < 3; ++v) {
+			float vertex_vals[3];
+			input.read(reinterpret_cast<char*>(vertex_vals), sizeof(vertex_vals));
+			if (!input) throw std::runtime_error("Unexpected EOF while reading vertex");
+			vec3_t vertex{vertex_vals[0], vertex_vals[1], vertex_vals[2]};
+			current_vertices[v] = vertex;
+
+			auto point_hash = point_hasher(vertex);
+			auto found = point_set.find(point_hash);
+			if (found != point_set.end() && found->second.first == vertex) {
+				tri.vertices[v] = found->second.second;
+			} else {
+				uint32_t idx = static_cast<uint32_t>(mesh.points.size());
+				point_set[point_hash] = {vertex, idx};
+				mesh.points.push_back(vertex);
+				tri.vertices[v] = idx;
+			}
+		}
+
+		// skip attribute byte count
+		uint16_t attribute_byte_count = 0;
+		input.read(reinterpret_cast<char*>(&attribute_byte_count), sizeof(attribute_byte_count));
+		if (!input) throw std::runtime_error("Unexpected EOF while reading attribute byte count");
+
+		// Ensure consistent winding with measured normal
+		auto measured_normal = tri.compute_normal(current_vertices);
+		if (tri.normal_vec.normalize() != measured_normal.normalize()) {
+			std::swap(tri.vertices[1], tri.vertices[2]);
+		}
+		tri.compute_centroid(current_vertices);
+		mesh.triangles.push_back(tri);
+	}
+
+	return mesh;
 }

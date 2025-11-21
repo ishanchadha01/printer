@@ -9,6 +9,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
     -std=c++20 \
     -stdlib=libc++")
 
+enable_testing()
 
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
@@ -23,10 +24,14 @@ FetchContent_MakeAvailable(googletest)
 # add_executable(test_stl tests/test_stl.cpp src/mesh.cpp src/main.cpp)
 # target_include_directories(test_stl PRIVATE ${PROJECT_SOURCE_DIR})
 # target_link_libraries(test_stl gtest_main)
+add_executable(test_stl tests/test_stl.cpp)
+target_include_directories(test_stl PRIVATE ${PROJECT_SOURCE_DIR})
+target_link_libraries(test_stl gtest_main)
 
 add_executable(test_controller tests/test_controller.cpp src/path_plan.cpp src/mesh.cpp)
 target_include_directories(test_controller PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(test_controller gtest_main)
 
-# include(GoogleTest)
-# gtest_discover_tests(test_controller)
+include(GoogleTest)
+gtest_discover_tests(test_stl)
+gtest_discover_tests(test_controller)

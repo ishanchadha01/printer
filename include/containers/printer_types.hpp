@@ -104,7 +104,7 @@ struct triangle_t {
     vec3_t normal_vec;
     vec3_t centroid;
 
-    vec3_t compute_normal(const std::array<vec3_t, 3>& vertices) {
+    vec3_t compute_normal(const std::array<vec3_t, 3>& vertices) const {
         vec3_t pA = vertices[0];
         vec3_t pB = vertices[1];
         vec3_t pC = vertices[2];

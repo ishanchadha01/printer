@@ -19,7 +19,7 @@ Create a self-sustaining, multi-end effector system with different modes of actu
 
 # Planning
 ## completed
-- vector and triangle primitices
+- vector and triangle primitives
 - stl parser
 - compute line segments of intersecting mesh triangles with each layer
 
