@@ -36,15 +36,15 @@ public:
 
     struct LayerPlan {
         float z = 0.0f;
-        std::vector<std::pair<vec3_t, vec3_t>> contours;
-        std::vector<std::pair<vec3_t, vec3_t>> infill;
+        std::vector<segment_t> contours;
+        std::vector<segment_t> infill;
     };
 
     const std::vector<LayerPlan>& get_plan() const { return plan_; }
     std::size_t layer_count() const { return plan_.size(); }
     const LayerPlan& get_layer(std::size_t idx) const { return plan_.at(idx); }
-    std::vector<std::pair<vec3_t, vec3_t>> get_layer_contours(std::size_t idx) const { return plan_.at(idx).contours; }
-    std::vector<std::pair<vec3_t, vec3_t>> get_layer_infill(std::size_t idx) const { return plan_.at(idx).infill; }
+    std::vector<segment_t> get_layer_contours(std::size_t idx) const { return plan_.at(idx).contours; }
+    std::vector<segment_t> get_layer_infill(std::size_t idx) const { return plan_.at(idx).infill; }
     const std::vector<Mesh>& get_meshes() const { return meshes; }
     const std::vector<std::vector<vec3_t>>& get_raw_layers() const { return raw_layers_; }
     std::vector<vec3_t> get_raw_layer_points(std::size_t idx) const { return raw_layers_.at(idx); }
@@ -52,9 +52,7 @@ public:
     void run() override {};
 
 private:
-    std::vector<std::vector<vec3_t>> populate_layer_lists(const Mesh& mesh, int layer_height_mm);
-    std::vector<std::pair<vec3_t, vec3_t>> contour_layer(const std::vector<vec3_t>& raw_pts, float z);
-    std::vector<std::pair<vec3_t, vec3_t>> compute_infill(const std::vector<vec3_t>& perimeter_pts, float z, float spacing);
+    std::vector<std::vector<segment_t>> populate_layer_lists(const Mesh& mesh, int layer_height_mm) const;
     void shift_meshes_to_build_plate();
 
     std::vector<Mesh> meshes;

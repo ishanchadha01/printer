@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <utility>
 
 
 // Constants
@@ -121,3 +122,6 @@ struct triangle_t {
         centroid = (pA+pB+pC) * (1.0f/3.0f);
     }
 };
+
+using segment_t = std::pair<vec3_t, vec3_t>;
+using polygon_t = std::vector<vec3_t>;
