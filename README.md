@@ -1,22 +1,22 @@
-
-Build instructions:
+Quick start:
 ```
 mkdir build
 cd build
 cmake ..
 make
-ctest // If you want to run unit tests
 ```
 
-For path visualization:
-```
-python visualization/visualize_path.py tests/data/torus_ascii.stl \
-  --layer-height 1 --layer 7 --show-mesh --show-raw-intersections \
-  --show-contours --color-intersecting-tris --list-intersecting-tris \
-  --module-path build
-```
-<img src="./img/torus_planar_slice.png" alt="Torus Planar Slice" width="40%">
+Visualization workflow:
+- API: `python visualization/server.py --module-path build --port 8000`
+- Client: `cd client && npm start` (set `REACT_APP_VIZ_URL` if API is not localhost:8000/visualize)
+- In the app: import STL → adjust slice controls → Render preview to see the embedded Matplotlib image.
 
+Headless preview (CLI):
+```
+python visualization/visualize_path.py tests/data/torus_ascii.stl --layer-height 1 --layer 7 --show-mesh --show-contours --module-path build
+```
+
+![Printer UI](img/printer_ui.png)
 
 # Goal
 Create a self-sustaining, multi-end effector system with different modes of actuation for managing a garden
