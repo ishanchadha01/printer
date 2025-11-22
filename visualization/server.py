@@ -11,6 +11,8 @@ for the PNG image and a few metadata fields.
 
 import argparse
 import base64
+import socket
+import sys
 import tempfile
 from io import BytesIO
 from pathlib import Path
@@ -169,6 +171,22 @@ def build_app(module_path: Optional[Path]):
 
         return jsonify(result)
 
+    @app.route("/control/shutdown", methods=["POST", "OPTIONS"])
+    def shutdown():
+        if request.method == "OPTIONS":
+            return ("", 204)
+        payload = request.get_json(silent=True) or {}
+        worker_id = payload.get("workerId", 0)
+        # Send shutdown to controller IPC listener
+        ipc_resp = send_shutdown_to_controller()
+        if ipc_resp is None:
+            return jsonify({"error": "Failed to reach controller IPC"}), 500
+        return jsonify({"message": "Shutdown signal sent to controller task dispatcher.", "ipc": ipc_resp, "workerId": worker_id})
+
+    @app.route("/health", methods=["GET"])
+    def health():
+        return jsonify({"status": "ok", "modulePath": str(module_path) if module_path else None})
+
     return app
 
 
@@ -178,8 +196,26 @@ def main():
     parser.add_argument("--port", type=int, default=8000, help="Port to listen on.")
     args = parser.parse_args()
 
+    # Validate bindings early so failures are visible at startup
+    add_module_path(args.module_path)
+    try:
+        import pathplan_bindings  # noqa: F401
+    except Exception as exc:
+        sys.stderr.write(f"Failed to import pathplan_bindings (module-path={args.module_path}): {exc}\n")
+        sys.exit(1)
+
     app = build_app(args.module_path)
     app.run(host="0.0.0.0", port=args.port, debug=False)
+
+
+def send_shutdown_to_controller(port: int = 9000, host: str = "127.0.0.1") -> Optional[str]:
+    try:
+        with socket.create_connection((host, port), timeout=1.0) as sock:
+            sock.sendall(b"shutdown\n")
+            resp = sock.recv(64)
+            return resp.decode("utf-8", errors="ignore").strip()
+    except OSError:
+        return None
 
 
 if __name__ == "__main__":

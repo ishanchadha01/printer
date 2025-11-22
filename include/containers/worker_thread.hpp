@@ -5,6 +5,7 @@
 #include "include/containers/data_packet.hpp"
 
 #include <thread>
+#include <stop_token>
 
 using DefaultBuffer = CircularBuffer< 
     std::pair< TaskId, DefaultDataPacket<DEFAULT_NUM_TASK_BITS, DEFAULT_BLOCK_SIZE>  >, 
@@ -20,7 +21,7 @@ public:
 
     virtual ~WorkerThread() = default;
 
-    virtual void run() = 0;
+    virtual void run(std::stop_token st) = 0;
 
     void set_thread(std::jthread&& thread)
     {

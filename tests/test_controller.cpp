@@ -12,6 +12,7 @@
 #include "include/containers/circular_buffer.hpp"
 #include "include/workers/controller.hpp"
 #include "include/workers/path_plan.hpp"
+#include "include/workers/frontend.hpp"
 
 class ControllerTest : public testing::Test {
 protected:
@@ -38,6 +39,15 @@ static bool wait_for_pool_size(Controller& controller, size_t expected, std::chr
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
     return controller.get_thread_pool_size() == expected;
+}
+
+static bool wait_for_state(Controller& controller, States target, std::chrono::milliseconds timeout) {
+    auto deadline = std::chrono::steady_clock::now() + timeout;
+    while (std::chrono::steady_clock::now() < deadline) {
+        if (controller.state() == target) return true;
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    return controller.state() == target;
 }
 
 // test 1 - request worker, release worker, check pool
@@ -180,4 +190,22 @@ TEST(DefaultDataPacketTest, InsertPopulatesTypesAndBits) {
     std::memcpy(restored.data(), &raw_chars, restored.size());
     EXPECT_EQ(restored[0], 'o');
     EXPECT_EQ(restored[1], 'k');
+}
+
+// worker that sends shutdown to controller to release itself + stop the controller loop
+TEST_F(ControllerTest, ShutdownCommandReleasesUiAndStopsController) {
+    auto ui = controller_.request_worker<UiWorker>();
+    auto viz = controller_.request_worker<VisualizationServerWorker>();
+    ASSERT_EQ(controller_.get_thread_pool_size(), 2u);
+
+    DefaultDataPacketT shutdown_packet;
+    shutdown_packet.reset();
+    shutdown_packet.insert(0, static_cast<std::int64_t>(CmdId::ShutdownController));
+    // ask controller to release the UI worker
+    shutdown_packet.insert(1, static_cast<std::int64_t>(ui->get_id()));
+
+    ui->send_data(std::move(shutdown_packet), ControllerTaskIdx);
+
+    ASSERT_TRUE(wait_for_pool_size(controller_, 0u, std::chrono::seconds(2)));
+    ASSERT_TRUE(wait_for_state(controller_, States::SHUTDOWN, std::chrono::seconds(2)));
 }

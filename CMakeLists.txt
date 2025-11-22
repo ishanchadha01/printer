@@ -38,6 +38,11 @@ add_executable(test_controller tests/test_controller.cpp src/path_plan.cpp src/m
 target_include_directories(test_controller PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(test_controller gtest_main)
 
+# main controller executable
+add_executable(controller src/main.cpp src/path_plan.cpp src/mesh.cpp)
+target_include_directories(controller PRIVATE ${PROJECT_SOURCE_DIR})
+add_dependencies(controller pathplan_bindings)
+
 include(GoogleTest)
 gtest_discover_tests(test_stl)
 gtest_discover_tests(test_controller)

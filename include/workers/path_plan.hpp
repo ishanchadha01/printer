@@ -19,6 +19,7 @@
 #include <memory>
 #include <cstddef>
 #include <utility>
+#include <stop_token>
 
 class PathPlanner : public WorkerThread
 {
@@ -49,7 +50,7 @@ public:
     const std::vector<std::vector<vec3_t>>& get_raw_layers() const { return raw_layers_; }
     std::vector<vec3_t> get_raw_layer_points(std::size_t idx) const { return raw_layers_.at(idx); }
 
-    void run() override {};
+    void run(std::stop_token) override {};
 
 private:
     std::vector<std::vector<segment_t>> populate_layer_lists(const Mesh& mesh, int layer_height_mm) const;

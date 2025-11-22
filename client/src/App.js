@@ -2,6 +2,8 @@ import './App.css';
 import React, { useRef, useState } from 'react';
 
 const API_URL = process.env.REACT_APP_VIZ_URL || 'http://localhost:8000/visualize';
+const CONTROL_URL = process.env.REACT_APP_CONTROL_URL || 'http://localhost:8000/control/shutdown';
+const UI_WORKER_ID = parseInt(process.env.REACT_APP_UI_WORKER_ID ?? '0', 10);
 
 const defaultParams = {
   layerHeight: 1,
@@ -21,7 +23,9 @@ function App() {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [meta, setMeta] = useState(null);
+  const [shuttingDown, setShuttingDown] = useState(false);
 
   const selectCAD = () => {
     cadFileRef.current?.click();
@@ -48,6 +52,7 @@ function App() {
 
     setLoading(true);
     setError('');
+    setInfo('');
     setPreview(null);
 
     const formData = new FormData();
@@ -67,6 +72,31 @@ function App() {
       setError(err.message || 'Unable to reach visualization service.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const requestShutdown = async () => {
+    setShuttingDown(true);
+    setError('');
+    setInfo('');
+    try {
+      const response = await fetch(CONTROL_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workerId: UI_WORKER_ID }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || 'Failed to signal shutdown.');
+      }
+      const payload = await response.json();
+      setPreview(null);
+      setMeta(null);
+      setInfo(payload.message || 'Shutdown signal sent to controller.');
+    } catch (err) {
+      setError(err.message || 'Unable to reach controller dispatcher.');
+    } finally {
+      setShuttingDown(false);
     }
   };
 
@@ -131,17 +161,21 @@ function App() {
 
             <div className="actions">
               <button className="button primary" onClick={visualize} disabled={loading}>
-                {loading ? 'Rendering…' : 'Render preview'}
+                {loading ? 'Rendering...' : 'Render preview'}
               </button>
               <p className="hint">Runs the Python Matplotlib script via the visualization API.</p>
+              <button className="button danger" onClick={requestShutdown} disabled={shuttingDown}>
+                {shuttingDown ? 'Shutting down...' : 'Shutdown controller'}
+              </button>
             </div>
             {error && <p className="error">{error}</p>}
+            {info && !error && <p className="info">{info}</p>}
           </section>
 
           <section className="panel preview">
             <div className="panel-title">Preview</div>
             <div className="preview-frame">
-              {loading && <div className="placeholder">Crunching paths…</div>}
+              {loading && <div className="placeholder">Crunching paths...</div>}
               {!loading && preview && <img src={preview} alt="Matplotlib layer preview" />}
               {!loading && !preview && <div className="placeholder">Import a CAD file and render to see the plot.</div>}
             </div>

@@ -3,11 +3,23 @@ Quick start:
 mkdir build
 cd build
 cmake ..
-make
+make controller pathplan_bindings
+./controller
 ```
+Controller stays alive until it receives a shutdown command (or Ctrl+C).
+By default it auto-launches the React UI (port 3000) and Flask viz API (port 8000); set `AUTO_START_FRONTENDS=0` to skip. Logs: `/tmp/ui.log` and `/tmp/visualization-server.log`. The viz API needs `pathplan_bindings` built (`make pathplan_bindings`).
+
+Python virtualenv for viz (recommended to avoid Homebrew pip guard):
+```
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r visualization/requirements.txt
+```
+Then run the API with `python3 visualization/server.py --module-path build --port 8000` or let the controller auto-launch it.
+Shutdown: the React button calls the viz API, which sends a shutdown signal to the controller. The controller will stop itself and SIGTERM the auto-started UI/API PIDs recorded in `/tmp/ui.pid` and `/tmp/visualization-server.pid`.
 
 Visualization workflow:
-- API: `python visualization/server.py --module-path build --port 8000`
+- API: `python3 visualization/server.py --module-path build --port 8000` (requires `make pathplan_bindings`)
 - Client: `cd client && npm start` (set `REACT_APP_VIZ_URL` if API is not localhost:8000/visualize)
 - In the app: import STL → adjust slice controls → Render preview to see the embedded Matplotlib image.
 

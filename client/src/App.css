@@ -142,6 +142,7 @@ h1 {
   align-items: center;
   gap: 12px;
   margin-top: 8px;
+  flex-wrap: wrap;
 }
 
 .button {
@@ -165,6 +166,12 @@ h1 {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.button.danger {
+  background: linear-gradient(135deg, #ff6b6b, #ff9e6a);
+  color: #0b1021;
+  box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+}
+
 .button:hover {
   transform: translateY(-1px);
 }
@@ -183,6 +190,11 @@ h1 {
 .error {
   margin-top: 10px;
   color: #ff8f8f;
+}
+
+.info {
+  margin-top: 10px;
+  color: #6de2b2;
 }
 
 .preview-frame {

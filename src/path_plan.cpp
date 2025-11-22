@@ -553,34 +553,6 @@ std::vector<segment_t> Mesh::intersect_triangle_with_plane(const triangle_t& tri
     return segments;
 }
 
-
-void Mesh::populate_layer_lists(int layer_height_mm) {
-    size_t num_layers = static_cast<size_t>(MAX_PART_HEIGHT_MM / layer_height_mm);
-    std::vector<std::vector<segment_t>> layers(num_layers);
-    for (const triangle_t& tri : this->triangles) {
-        float z0 = points[tri.vertices[0]].z;
-        float z1 = points[tri.vertices[1]].z;
-        float z2 = points[tri.vertices[2]].z;
-        auto max_z = std::max({z0, z1, z2});
-        auto min_z = std::min({z0, z1, z2});
-        auto start_layer = static_cast<int>(std::floor(min_z / layer_height_mm));
-        auto end_layer = static_cast<int>(std::ceil(max_z / layer_height_mm));
-
-        start_layer = std::max(0, start_layer);
-        end_layer = std::min(static_cast<int>(num_layers) - 1, end_layer);
-
-        for (int l = start_layer; l <= end_layer; l++) {
-            float layer_z = static_cast<float>(l * layer_height_mm);
-            auto segs = this->intersect_triangle_with_plane(tri, layer_z);
-            if (!segs.empty()) {
-                auto& layer = layers[static_cast<std::size_t>(l)];
-                layer.insert(layer.end(), segs.begin(), segs.end());
-            }
-        }
-    }
-    (void)layers; // retained for future debugging/extension
-}
-
 std::vector<std::vector<segment_t>> PathPlanner::populate_layer_lists(const Mesh& mesh, int layer_height_mm) const {
     size_t num_layers = static_cast<size_t>(MAX_PART_HEIGHT_MM / layer_height_mm);
     std::vector<std::vector<segment_t>> layers(num_layers);

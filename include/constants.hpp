@@ -4,6 +4,7 @@
 
 // For controller
 constexpr size_t THREAD_POOL_CAPACITY = 16;
+constexpr int CONTROLLER_IPC_PORT = 9000;
 
 // For data packet
 constexpr size_t DEFAULT_NUM_TASK_BITS = 64;
@@ -15,7 +16,8 @@ constexpr TaskId ControllerTaskIdx = -1;
 
 enum class CmdId : std::int64_t
 {
-    ReleaseWorker = 1
+    ReleaseWorker = 1,
+    ShutdownController = 2
 };
 
 enum class States {
